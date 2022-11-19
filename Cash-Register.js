@@ -1,6 +1,6 @@
 function checkCashRegister(price, cash, cid) {
 
-  let currencyArray = [
+  let denomArray = [
     ["ONE HUNDRED", 100], 
     ["TWENTY", 20], 
     ["TEN", 10], 
@@ -13,47 +13,48 @@ function checkCashRegister(price, cash, cid) {
     ]
 
   let reversedCid = cid.reverse();
+  
 
-  let mapped = currencyArray.map((element, index) => [element[0], element[1], reversedCid[index][1]]
-  );
+  let denomAndCidArr = denomArray.map((element, index) => [element[0], element[1], reversedCid[index][1]]);
 
-  let cidSum = mapped.reduce(
-  (result, currentValue) => result + currentValue[2], 0);
+  const minDenom = denomAndCidArr.reduce((first, second) =>  first[1] < second[1] ? first[1] : second[1]);
 
-  let changeToGiveToClient = cash - price;
+  let cidSum = denomAndCidArr.reduce((result, currentValue) => result + currentValue[2], 0);
 
-  if(changeToGiveToClient > cidSum) {
+  let change = cash - price;
+
+  if(change > cidSum) {
     return {status: "INSUFFICIENT_FUNDS", change: []}
   }
 
-  if(changeToGiveToClient == cidSum) {
-    let returnObj = mapped.map((element) => [element[0], element[2]]).reverse();
+  if(change == cidSum) {
+    let returnObj = denomAndCidArr.map((element) => [element[0], element[2]]).reverse();
     return {status: "CLOSED", change: returnObj};
   }
 
   let returnObj = [];
 
-  for(let i = 0; i < mapped.length; i++) {
-    let nameOfcurrentNominal = mapped[i][0];
-    let currentNominal = mapped[i][1];
-    let sumOfCurrentNominal = mapped[i][2].toFixed(2);
-    if(currentNominal > changeToGiveToClient || sumOfCurrentNominal == 0) {
+  for(let i = 0; i < denomAndCidArr.length; i++) {
+    let currentDenomName = denomAndCidArr[i][0];
+    let currentDenomVal = denomAndCidArr[i][1];
+    let currentDenomSum = denomAndCidArr[i][2].toFixed(2);
+    if(currentDenomVal > change || currentDenomSum == 0) {
       continue;
     }
-    let numberOfCurrentBillsInCashRegister = Math.round(sumOfCurrentNominal/currentNominal);
+    let currentDenomBillsInCashReg = Math.round(currentDenomSum/currentDenomVal);
     let currentBillsGivenToClient = 0;
-    while(currentNominal <= changeToGiveToClient) {
-      --numberOfCurrentBillsInCashRegister;
+    while(currentDenomVal <= change) {
+      --currentDenomBillsInCashReg;
       ++currentBillsGivenToClient;
-      let valueOfCurrentBillsGivenToClient = (currentNominal * currentBillsGivenToClient).toFixed(2);
-      sumOfCurrentNominal = (currentNominal * numberOfCurrentBillsInCashRegister).toFixed(2);
-      changeToGiveToClient = parseFloat((changeToGiveToClient - currentNominal).toFixed(2));
-      if((sumOfCurrentNominal == 0) || (changeToGiveToClient == 0) || (changeToGiveToClient < currentNominal)) {
-        returnObj.push([nameOfcurrentNominal, parseFloat(valueOfCurrentBillsGivenToClient)]);
-        if((sumOfCurrentNominal == 0) && (changeToGiveToClient != 0) && currentNominal == 0.01) {
+      let valueOfCurrentBillsGivenToClient = (currentDenomVal * currentBillsGivenToClient).toFixed(2);
+      currentDenomSum = (currentDenomVal * currentDenomBillsInCashReg).toFixed(2);
+      change = parseFloat((change - currentDenomVal).toFixed(2));
+      if((currentDenomSum == 0) || (change == 0) || (change < currentDenomVal)) {
+        returnObj.push([currentDenomName, parseFloat(valueOfCurrentBillsGivenToClient)]);
+        if((currentDenomSum == 0) && (change != 0) && currentDenomVal == minDenom) {
           return {status: "INSUFFICIENT_FUNDS", change: []};
         }
-        if(changeToGiveToClient === 0) {
+        if(change === 0) {
           return {status: "OPEN", change: returnObj};
         }
         break;
