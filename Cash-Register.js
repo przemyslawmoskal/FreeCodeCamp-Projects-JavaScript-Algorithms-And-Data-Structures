@@ -13,7 +13,6 @@ function checkCashRegister(price, cash, cid) {
     ]
 
   let reversedCid = cid.reverse();
-  
 
   let denomAndCidArr = denomArray.map((element, index) => [element[0], element[1], reversedCid[index][1]]);
 
